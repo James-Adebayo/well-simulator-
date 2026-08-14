@@ -1,37 +1,984 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Well Simulator — WELL-001 Dashboard</title>
+    <meta name="description" content="Real-time telemetry dashboard for WELL-001 oil well simulator." />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
+        rel="stylesheet" />
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        :root {
+            --bg: #090c12;
+            --card: #0f1520;
+            --card2: #141c2b;
+            --border: rgba(255, 255, 255, 0.07);
+            --glow: rgba(56, 189, 248, 0.3);
+            --blue: #38bdf8;
+            --cyan: #06b6d4;
+            --amber: #f59e0b;
+            --red: #ef4444;
+            --green: #22c55e;
+            --purple: #a78bfa;
+            --t1: #f0f6ff;
+            --t2: #8fa3c0;
+            --t3: #4a6282;
+            --r: 14px;
+            --rs: 8px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--t1);
+            min-height: 100vh;
+            overflow-x: hidden
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0
+        }
+
+        header {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 28px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(9, 12, 18, 0.85);
+            backdrop-filter: blur(16px)
+        }
+
+        .hl {
+            display: flex;
+            align-items: center;
+            gap: 12px
+        }
+
+        .logo {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, var(--blue), var(--cyan));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 0 18px rgba(56, 189, 248, 0.35)
+        }
+
+        .ht {
+            font-size: 17px;
+            font-weight: 700
+        }
+
+        .hs {
+            font-size: 11px;
+            color: var(--t2);
+            margin-top: 2px
+        }
+
+        .hr {
+            display: flex;
+            align-items: center;
+            gap: 18px
+        }
+
+        #cb {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 5px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: var(--card2);
+            transition: all .4s
+        }
+
+        #cb.on {
+            border-color: rgba(34, 197, 94, .4);
+            color: var(--green)
+        }
+
+        #cb.off {
+            border-color: rgba(239, 68, 68, .4);
+            color: var(--red)
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor
+        }
+
+        #cb.on .dot {
+            animation: pg 1.5s infinite
+        }
+
+        @keyframes pg {
+
+            0%,
+            100% {
+                opacity: 1;
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, .5)
+            }
+
+            50% {
+                opacity: .8;
+                box-shadow: 0 0 0 5px rgba(34, 197, 94, 0)
+            }
+        }
+
+        #clk {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--t2)
+        }
+
+        main {
+            position: relative;
+            z-index: 1;
+            max-width: 1360px;
+            margin: 0 auto;
+            padding: 24px 24px 48px
+        }
+
+        .wi {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: 18px 24px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden
+        }
+
+        .wi::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--sc, var(--blue));
+            border-radius: 4px 0 0 4px;
+            transition: background .5s
+        }
+
+        .wn {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -.5px
+        }
+
+        .wn span {
+            color: var(--blue)
+        }
+
+        .lu {
+            font-size: 12px;
+            color: var(--t3);
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: 4px
+        }
+
+        #sb {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            padding: 7px 16px;
+            border-radius: 20px;
+            border: 1px solid currentColor;
+            transition: all .5s
+        }
+
+        #sb.PRODUCING {
+            color: var(--green);
+            background: rgba(34, 197, 94, .1)
+        }
+
+        #sb.SHUT_IN {
+            color: var(--amber);
+            background: rgba(245, 158, 11, .1)
+        }
+
+        #sb.FAULT {
+            color: var(--red);
+            background: rgba(239, 68, 68, .1);
+            animation: fp 1s infinite
+        }
+
+        @keyframes fp {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, .4)
+            }
+
+            50% {
+                box-shadow: 0 0 0 8px rgba(239, 68, 68, 0)
+            }
+        }
+
+        .kg {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 20px
+        }
+
+        .kc {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: 20px 22px;
+            position: relative;
+            overflow: hidden;
+            transition: border-color .3s, transform .2s
+        }
+
+        .kc:hover {
+            border-color: var(--glow);
+            transform: translateY(-2px)
+        }
+
+        .kc::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 90px;
+            height: 90px;
+            background: radial-gradient(circle at top right, var(--ca, rgba(56, 189, 248, .08)), transparent 70%);
+            pointer-events: none
+        }
+
+        .kl {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: var(--t2);
+            margin-bottom: 8px
+        }
+
+        .kv {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 36px;
+            font-weight: 600;
+            line-height: 1;
+            transition: color .4s
+        }
+
+        .ku {
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--t2);
+            margin-left: 3px
+        }
+
+        .kt {
+            margin-top: 8px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--t3)
+        }
+
+        .kt.up {
+            color: var(--green)
+        }
+
+        .kt.dn {
+            color: var(--red)
+        }
+
+        .gw {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%)
+        }
+
+        .gs {
+            width: 60px;
+            height: 60px
+        }
+
+        .gt {
+            fill: none;
+            stroke: rgba(255, 255, 255, .06);
+            stroke-width: 5
+        }
+
+        .gf {
+            fill: none;
+            stroke-width: 5;
+            stroke-linecap: round;
+            transform-origin: center;
+            transform: rotate(-90deg);
+            transition: stroke-dashoffset .6s cubic-bezier(.4, 0, .2, 1), stroke .4s
+        }
+
+        .ss {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: 20px 22px;
+            margin-bottom: 20px
+        }
+
+        .st {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: .5px;
+            color: var(--t2);
+            text-transform: uppercase;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .st::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border)
+        }
+
+        .cg {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px
+        }
+
+        .cc {
+            background: var(--card2);
+            border: 1px solid var(--border);
+            border-radius: var(--rs);
+            padding: 12px 14px
+        }
+
+        .cl {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--t3);
+            margin-bottom: 8px
+        }
+
+        canvas.sp {
+            width: 100%;
+            height: 58px;
+            display: block
+        }
+
+        .eg {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 20px
+        }
+
+        .ec {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: 20px 22px;
+            display: flex;
+            align-items: center;
+            gap: 16px
+        }
+
+        .ei {
+            width: 50px;
+            height: 50px;
+            border-radius: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+            transition: all .4s
+        }
+
+        .ei.on {
+            background: rgba(34, 197, 94, .15);
+            box-shadow: 0 0 20px rgba(34, 197, 94, .2)
+        }
+
+        .ei.off {
+            background: rgba(239, 68, 68, .10)
+        }
+
+        .en {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 3px
+        }
+
+        .es {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: .8px;
+            text-transform: uppercase;
+            transition: color .4s
+        }
+
+        .es.on {
+            color: var(--green)
+        }
+
+        .es.off {
+            color: var(--red)
+        }
+
+        .tg {
+            width: 46px;
+            height: 24px;
+            border-radius: 12px;
+            border: none;
+            position: relative;
+            transition: background .4s;
+            flex-shrink: 0
+        }
+
+        .tg::before {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #fff;
+            top: 3px;
+            transition: left .4s cubic-bezier(.4, 0, .2, 1)
+        }
+
+        .tg.on {
+            background: var(--green)
+        }
+
+        .tg.on::before {
+            left: 25px
+        }
+
+        .tg.off {
+            background: rgba(255, 255, 255, .15)
+        }
+
+        .tg.off::before {
+            left: 3px
+        }
+
+        .ls {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: 20px 22px
+        }
+
+        #el {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            max-height: 170px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 5px
+        }
+
+        #el::-webkit-scrollbar {
+            width: 3px
+        }
+
+        #el::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, .1);
+            border-radius: 2px
+        }
+
+        .le {
+            display: flex;
+            gap: 10px;
+            padding: 5px 8px;
+            border-radius: 6px;
+            animation: fi .3s ease
+        }
+
+        .le:hover {
+            background: rgba(255, 255, 255, .03)
+        }
+
+        @keyframes fi {
+            from {
+                opacity: 0;
+                transform: translateY(-5px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .lt {
+            color: var(--t3);
+            flex-shrink: 0
+        }
+
+        .lm {
+            color: var(--t2)
+        }
+
+        .lm.info {
+            color: var(--blue)
+        }
+
+        .lm.warn {
+            color: var(--amber)
+        }
+
+        .lm.err {
+            color: var(--red)
+        }
+
+        .lm.ok {
+            color: var(--green)
+        }
+
+        /* ── Alert panel ──────────────────────────── */
+        #alert-panel {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px
+        }
+        #alert-panel:empty { display: none }
+
+        .alert-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 14px 18px;
+            border-radius: var(--r);
+            border: 1px solid;
+            position: relative;
+            overflow: hidden;
+            animation: slideIn .35s cubic-bezier(.4,0,.2,1);
+        }
+        @keyframes slideIn {
+            from { opacity:0; transform: translateY(-8px) }
+            to   { opacity:1; transform: translateY(0) }
+        }
+        .alert-card.WARNING {
+            background: rgba(245,158,11,.08);
+            border-color: rgba(245,158,11,.35)
+        }
+        .alert-card.CRITICAL {
+            background: rgba(239,68,68,.10);
+            border-color: rgba(239,68,68,.4);
+            animation: slideIn .35s cubic-bezier(.4,0,.2,1), alertPulse 2s infinite
+        }
+        @keyframes alertPulse {
+            0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0) }
+            50%      { box-shadow: 0 0 0 6px rgba(239,68,68,.15) }
+        }
+        .alert-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+            margin-top: 1px
+        }
+        .alert-body { flex: 1 }
+        .alert-code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-bottom: 3px
+        }
+        .alert-card.WARNING .alert-code { color: var(--amber) }
+        .alert-card.CRITICAL .alert-code { color: var(--red) }
+        .alert-msg {
+            font-size: 13px;
+            color: var(--t2)
+        }
+        .alert-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--t3);
+            margin-top: 4px
+        }
+        .alert-level-chip {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            padding: 3px 9px;
+            border-radius: 10px;
+            flex-shrink: 0;
+            align-self: flex-start
+        }
+        .alert-card.WARNING .alert-level-chip  { background: rgba(245,158,11,.2); color: var(--amber) }
+        .alert-card.CRITICAL .alert-level-chip { background: rgba(239,68,68,.2);  color: var(--red) }
+
+        /* header badge */
+        #alert-badge {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 5px 12px;
+            border-radius: 20px;
+            border: 1px solid;
+            transition: all .4s
+        }
+        #alert-badge.WARNING  { display:flex; border-color:rgba(245,158,11,.4); color:var(--amber); background:rgba(245,158,11,.1) }
+        #alert-badge.CRITICAL { display:flex; border-color:rgba(239,68,68,.4);  color:var(--red);   background:rgba(239,68,68,.1); animation:alertPulse 1.5s infinite }
+
+        @media(max-width:900px) {
+
+            .kg,
+            .cg {
+                grid-template-columns: 1fr 1fr
+            }
+
+            .eg {
+                grid-template-columns: 1fr
+            }
+        }
+
+        @media(max-width:600px) {
+
+            .kg,
+            .cg {
+                grid-template-columns: 1fr
+            }
+
+            header {
+                flex-wrap: wrap;
+                gap: 10px
+            }
+        }
+    </style>
 </head>
+
 <body>
-    <p id="well-data"></p>
+    <header>
+        <div class="hl">
+            <div class="logo">⛽</div>
+            <div>
+                <div class="ht">WellSim Operations</div>
+                <div class="hs">Real-Time Telemetry Dashboard</div>
+            </div>
+        </div>
+        <div class="hr">
+            <div id="alert-badge">⚠ <span id="alert-badge-text">0 Alerts</span></div>
+            <div id="cb" class="off"><span class="dot"></span><span id="ct">Connecting…</span></div>
+            <div id="clk">--:--:--</div>
+        </div>
+    </header>
+
+    <main>
+        <div class="wi" id="wi">
+            <div>
+                <div class="wn">WELL-<span>001</span></div>
+                <div class="lu" id="lu">Awaiting data…</div>
+            </div>
+            <div id="sb" class="PRODUCING"><span>●</span> PRODUCING</div>
+        </div>
+
+        <!-- Active alerts panel -->
+        <div id="alert-panel"></div>
+
+        <div class="kg">
+            <div class="kc" style="--ca:rgba(56,189,248,.10)">
+                <div class="kl">🔵 Pressure</div>
+                <div><span class="kv" id="vp" style="color:var(--blue)">—</span><span class="ku">PSI</span></div>
+                <div class="kt" id="tp">—</div>
+                <div class="gw"><svg class="gs" viewBox="0 0 64 64">
+                        <circle class="gt" cx="32" cy="32" r="27" />
+                        <circle class="gf" id="gp" cx="32" cy="32" r="27" stroke="var(--blue)" stroke-dasharray="169.6"
+                            stroke-dashoffset="169.6" />
+                    </svg></div>
+            </div>
+            <div class="kc" style="--ca:rgba(245,158,11,.10)">
+                <div class="kl">🌡️ Temperature</div>
+                <div><span class="kv" id="vt" style="color:var(--amber)">—</span><span class="ku">°C</span></div>
+                <div class="kt" id="tt">—</div>
+                <div class="gw"><svg class="gs" viewBox="0 0 64 64">
+                        <circle class="gt" cx="32" cy="32" r="27" />
+                        <circle class="gf" id="gt" cx="32" cy="32" r="27" stroke="var(--amber)" stroke-dasharray="169.6"
+                            stroke-dashoffset="169.6" />
+                    </svg></div>
+            </div>
+            <div class="kc" style="--ca:rgba(34,197,94,.10)">
+                <div class="kl">💧 Flow Rate</div>
+                <div><span class="kv" id="vf" style="color:var(--green)">—</span><span class="ku">BPD</span></div>
+                <div class="kt" id="tf">—</div>
+                <div class="gw"><svg class="gs" viewBox="0 0 64 64">
+                        <circle class="gt" cx="32" cy="32" r="27" />
+                        <circle class="gf" id="gf" cx="32" cy="32" r="27" stroke="var(--green)" stroke-dasharray="169.6"
+                            stroke-dashoffset="169.6" />
+                    </svg></div>
+            </div>
+        </div>
+
+        <div class="ss">
+            <div class="st">📈 Trend History (60s)</div>
+            <div class="cg">
+                <div class="cc">
+                    <div class="cl">Pressure PSI</div><canvas id="cp" class="sp"></canvas>
+                </div>
+                <div class="cc">
+                    <div class="cl">Temperature °C</div><canvas id="ct2" class="sp"></canvas>
+                </div>
+                <div class="cc">
+                    <div class="cl">Flow Rate BPD</div><canvas id="cf" class="sp"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="eg">
+            <div class="ec">
+                <div class="ei off" id="vi">🚪</div>
+                <div style="flex:1">
+                    <div class="en">Surface Valve</div>
+                    <div class="es off" id="vs">CLOSED</div>
+                </div>
+                <div class="tg off" id="vt2"></div>
+            </div>
+            <div class="ec">
+                <div class="ei off" id="pi">⚙️</div>
+                <div style="flex:1">
+                    <div class="en">ESP Pump</div>
+                    <div class="es off" id="ps">STOPPED</div>
+                </div>
+                <div class="tg off" id="pt"></div>
+            </div>
+        </div>
+
+        <div class="ls">
+            <div class="st">📋 Event Log</div>
+            <div id="el"></div>
+        </div>
+    </main>
+
+    <script>
+        const H = 60, hist = { p: [], t: [], f: [] };
+        const P0 = 2500, P1 = 4500, T0 = 60, T1 = 130, F0 = 0, F1 = 5000;
+        const c01 = (v, a, b) => Math.max(0, Math.min(1, (v - a) / (b - a)));
+        const fmt = (v, d = 1) => typeof v === 'number' ? v.toFixed(d) : '—';
+        const hms = d => d.toLocaleTimeString('en-GB', { hour12: false });
+
+        // Clock
+        const clkEl = document.getElementById('clk');
+        setInterval(() => clkEl.textContent = hms(new Date()), 1000);
+        clkEl.textContent = hms(new Date());
+
+        // Gauge
+        function setG(id, f) { document.getElementById(id).style.strokeDashoffset = 169.6 - f * 169.6 }
+
+        // Sparkline
+        function drawSpark(canvas, data, color, mn, mx) {
+            const ctx = canvas.getContext('2d'), dpr = devicePixelRatio || 1;
+            const W = canvas.clientWidth, Hh = canvas.clientHeight;
+            canvas.width = W * dpr; canvas.height = Hh * dpr; ctx.scale(dpr, dpr);
+            ctx.clearRect(0, 0, W, Hh);
+            if (data.length < 2) return;
+            const p = 4, w = W - p * 2, h = Hh - p * 2;
+            // Pre-compute x,y points
+            const pts = data.map((v, i) => ({ x: p + (i / (H - 1)) * w, y: p + h - c01(v, mn, mx) * h }));
+            // Smooth bezier path builder (cardinal spline)
+            function smoothPath(ctx, pts) {
+                ctx.moveTo(pts[0].x, pts[0].y);
+                for (let i = 0; i < pts.length - 1; i++) {
+                    const p0 = pts[Math.max(i - 1, 0)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(i + 2, pts.length - 1)];
+                    const cp1x = p1.x + (p2.x - p0.x) / 6, cp1y = p1.y + (p2.y - p0.y) / 6;
+                    const cp2x = p2.x - (p3.x - p1.x) / 6, cp2y = p2.y - (p3.y - p1.y) / 6;
+                    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
+                }
+            }
+            const gr = ctx.createLinearGradient(0, p, 0, p + h);
+            gr.addColorStop(0, color + '55'); gr.addColorStop(1, color + '00');
+            // Fill
+            ctx.beginPath();
+            smoothPath(ctx, pts);
+            ctx.lineTo(pts[pts.length - 1].x, p + h); ctx.lineTo(pts[0].x, p + h); ctx.closePath();
+            ctx.fillStyle = gr; ctx.fill();
+            // Stroke
+            ctx.beginPath();
+            smoothPath(ctx, pts);
+            ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+            // Dot
+            const last = pts[pts.length - 1];
+            ctx.beginPath(); ctx.arc(last.x, last.y, 3.5, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill();
+        }
+        function charts() {
+            drawSpark(document.getElementById('cp'), hist.p, '#38bdf8', P0, P1);
+            drawSpark(document.getElementById('ct2'), hist.t, '#f59e0b', T0, T1);
+            drawSpark(document.getElementById('cf'), hist.f, '#22c55e', F0, F1);
+        }
+
+        // Log
+        function log(msg, type = 'info') {
+            const el = document.getElementById('el');
+            const e = document.createElement('div'); e.className = 'le';
+            e.innerHTML = `<span class="lt">${hms(new Date())}</span><span class="lm ${type}">${msg}</span>`;
+            el.prepend(e);
+            while (el.children.length > 40) el.removeChild(el.lastChild);
+        }
+
+        // Trend
+        function trend(id, cur, prev) {
+            const el = document.getElementById(id);
+            if (prev == null) { el.textContent = '—'; el.className = 'kt'; return }
+            const d = cur - prev, s = d > 0 ? '▲' : d < 0 ? '▼' : '●';
+            el.className = 'kt ' + (d > 0 ? 'up' : d < 0 ? 'dn' : '');
+            el.textContent = `${s} ${Math.abs(d).toFixed(1)}`;
+        }
+
+        let last = null, prevState = null, prevValve = null, prevPump = null;
+
+        function render(t) {
+            document.getElementById('vp').textContent = fmt(t.pressure_psi, 0);
+            document.getElementById('vt').textContent = fmt(t.temperature_c, 1);
+            document.getElementById('vf').textContent = fmt(t.flow_rate_bpd, 0);
+            setG('gp', c01(t.pressure_psi, P0, P1));
+            setG('gt', c01(t.temperature_c, T0, T1));
+            setG('gf', c01(t.flow_rate_bpd, F0, F1));
+            trend('tp', t.pressure_psi, last?.pressure_psi ?? null);
+            trend('tt', t.temperature_c, last?.temperature_c ?? null);
+            trend('tf', t.flow_rate_bpd, last?.flow_rate_bpd ?? null);
+            hist.p.push(t.pressure_psi); hist.t.push(t.temperature_c); hist.f.push(t.flow_rate_bpd);
+            if (hist.p.length > H) hist.p.shift();
+            if (hist.t.length > H) hist.t.shift();
+            if (hist.f.length > H) hist.f.shift();
+            charts();
+
+            const sb = document.getElementById('sb');
+            sb.className = t.state;
+            sb.innerHTML = `<span>●</span> ${t.state.replace('_', ' ')}`;
+            const sc = { PRODUCING: '#22c55e', SHUT_IN: '#f59e0b', FAULT: '#ef4444' };
+            document.getElementById('wi').style.setProperty('--sc', sc[t.state] || '#38bdf8');
+            if (prevState !== null && prevState !== t.state) log(`State → ${t.state.replace('_', ' ')}`, t.state === 'FAULT' ? 'err' : t.state === 'SHUT_IN' ? 'warn' : 'ok');
+            prevState = t.state;
+
+            function eq(ii, si, ti, on, lo, lf) {
+                document.getElementById(ii).className = `ei ${on ? 'on' : 'off'}`;
+                document.getElementById(si).textContent = on ? lo : lf;
+                document.getElementById(si).className = `es ${on ? 'on' : 'off'}`;
+                document.getElementById(ti).className = `tg ${on ? 'on' : 'off'}`;
+            }
+            eq('vi', 'vs', 'vt2', t.valve_open, 'OPEN', 'CLOSED');
+            eq('pi', 'ps', 'pt', t.pump_running, 'RUNNING', 'STOPPED');
+            if (prevValve !== null && prevValve !== t.valve_open) log(`Valve ${t.valve_open ? 'OPENED' : 'CLOSED'}`, t.valve_open ? 'ok' : 'warn');
+            if (prevPump !== null && prevPump !== t.pump_running) log(`Pump ${t.pump_running ? 'STARTED' : 'STOPPED'}`, t.pump_running ? 'ok' : 'warn');
+            prevValve = t.valve_open; prevPump = t.pump_running;
+
+            document.getElementById('lu').textContent = `Last update: ${hms(new Date(t.timestamp))}`;
+            last = t;
+
+            renderAlerts(t.alerts || [], t.alert_level || 'NONE');
+        }
+
+        // Alert icons per code
+        const alertIcons = {
+            OVERPRESSURE_CRIT: '💥', HIGH_PRESSURE: '🔺',
+            OVERTEMP_CRIT: '🔥', HIGH_TEMP: '🌡️',
+            LOW_FLOW_CRIT: '🚫', LOW_FLOW: '⚠️',
+            VALVE_CLOSED_PRODUCING: '🚪', PUMP_STOPPED_PRODUCING: '⚙️'
+        };
+
+        let prevAlertCodes = new Set();
+
+        function renderAlerts(alerts, level) {
+            const panel = document.getElementById('alert-panel');
+            const badge = document.getElementById('alert-badge');
+            const badgeText = document.getElementById('alert-badge-text');
+
+            // Update header badge
+            if (level === 'NONE' || alerts.length === 0) {
+                badge.className = '';
+                badge.style.display = 'none';
+            } else {
+                badge.className = level;
+                badge.style.display = 'flex';
+                badgeText.textContent = `${alerts.length} Alert${alerts.length > 1 ? 's' : ''}`;
+            }
+
+            // Log newly appearing alerts
+            const curCodes = new Set(alerts.map(a => a.code));
+            alerts.forEach(a => {
+                if (!prevAlertCodes.has(a.code)) {
+                    log(`[${a.code}] ${a.message}`, a.level === 'CRITICAL' ? 'err' : 'warn');
+                }
+            });
+            prevAlertCodes.forEach(c => {
+                if (!curCodes.has(c)) log(`Alert cleared: ${c}`, 'ok');
+            });
+            prevAlertCodes = curCodes;
+
+            // Rebuild panel
+            panel.innerHTML = '';
+            alerts.forEach(a => {
+                const icon = alertIcons[a.code] || (a.level === 'CRITICAL' ? '🚨' : '⚠️');
+                const valLine = a.threshold > 0
+                    ? `<div class="alert-val">Value: ${a.value.toFixed(1)} — Threshold: ${a.threshold.toFixed(1)}</div>`
+                    : '';
+                const card = document.createElement('div');
+                card.className = `alert-card ${a.level}`;
+                card.innerHTML = `
+                    <span class="alert-icon">${icon}</span>
+                    <div class="alert-body">
+                        <div class="alert-code">${a.code}</div>
+                        <div class="alert-msg">${a.message}</div>
+                        ${valLine}
+                    </div>
+                    <span class="alert-level-chip">${a.level}</span>`;
+                panel.appendChild(card);
+            });
+        }
+
+        // WebSocket
+        function connect() {
+            const ws = new WebSocket('ws://localhost:8080/ws');
+            const cb = document.getElementById('cb'), ct = document.getElementById('ct');
+            ws.onopen = () => { cb.className = 'on'; ct.textContent = 'Live'; log('Connected to ws://localhost:8080/ws', 'ok') };
+            ws.onmessage = e => { try { render(JSON.parse(e.data)) } catch (x) { log('Parse error: ' + x.message, 'err') } };
+            ws.onerror = () => log('WebSocket error', 'err');
+            ws.onclose = () => { cb.className = 'off'; ct.textContent = 'Disconnected'; log('Disconnected — retrying in 3s…', 'warn'); setTimeout(connect, 3000) };
+        }
+        connect();
+    </script>
 </body>
-<script>
-//    const fetchWell = async () => {
-//     try {
-//             const request = await fetch("/well/telementry", {
-//                 method: "GET",
-//                 headers: {
-//                     "Content-Type" : "application/json"
-//                 }
-//             });
-//             const response = await request.json();
-//             console.log(response);
-//         }catch(err){
-//             console.error(err);
-//         }
-//    }
 
-//    fetchWell();
-
-
-const socket = new WebSocket("ws://localhost:8080/ws");
-socket.onmessage = (event) => {
-    const telementry = JSON.parse(event.data);
-
-    console.log(telementry)
-}
-</script>
 </html>
