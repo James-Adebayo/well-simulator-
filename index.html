@@ -582,7 +582,10 @@
             flex-direction: column;
             gap: 10px
         }
-        #alert-panel:empty { display: none }
+
+        #alert-panel:empty {
+            display: none
+        }
 
         .alert-card {
             display: flex;
@@ -593,31 +596,54 @@
             border: 1px solid;
             position: relative;
             overflow: hidden;
-            animation: slideIn .35s cubic-bezier(.4,0,.2,1);
+            animation: slideIn .35s cubic-bezier(.4, 0, .2, 1);
         }
+
         @keyframes slideIn {
-            from { opacity:0; transform: translateY(-8px) }
-            to   { opacity:1; transform: translateY(0) }
+            from {
+                opacity: 0;
+                transform: translateY(-8px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
         }
+
         .alert-card.WARNING {
-            background: rgba(245,158,11,.08);
-            border-color: rgba(245,158,11,.35)
+            background: rgba(245, 158, 11, .08);
+            border-color: rgba(245, 158, 11, .35)
         }
+
         .alert-card.CRITICAL {
-            background: rgba(239,68,68,.10);
-            border-color: rgba(239,68,68,.4);
-            animation: slideIn .35s cubic-bezier(.4,0,.2,1), alertPulse 2s infinite
+            background: rgba(239, 68, 68, .10);
+            border-color: rgba(239, 68, 68, .4);
+            animation: slideIn .35s cubic-bezier(.4, 0, .2, 1), alertPulse 2s infinite
         }
+
         @keyframes alertPulse {
-            0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0) }
-            50%      { box-shadow: 0 0 0 6px rgba(239,68,68,.15) }
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0)
+            }
+
+            50% {
+                box-shadow: 0 0 0 6px rgba(239, 68, 68, .15)
+            }
         }
+
         .alert-icon {
             font-size: 20px;
             flex-shrink: 0;
             margin-top: 1px
         }
-        .alert-body { flex: 1 }
+
+        .alert-body {
+            flex: 1
+        }
+
         .alert-code {
             font-family: 'JetBrains Mono', monospace;
             font-size: 11px;
@@ -625,18 +651,27 @@
             letter-spacing: 1px;
             margin-bottom: 3px
         }
-        .alert-card.WARNING .alert-code { color: var(--amber) }
-        .alert-card.CRITICAL .alert-code { color: var(--red) }
+
+        .alert-card.WARNING .alert-code {
+            color: var(--amber)
+        }
+
+        .alert-card.CRITICAL .alert-code {
+            color: var(--red)
+        }
+
         .alert-msg {
             font-size: 13px;
             color: var(--t2)
         }
+
         .alert-val {
             font-family: 'JetBrains Mono', monospace;
             font-size: 11px;
             color: var(--t3);
             margin-top: 4px
         }
+
         .alert-level-chip {
             font-size: 10px;
             font-weight: 700;
@@ -646,8 +681,16 @@
             flex-shrink: 0;
             align-self: flex-start
         }
-        .alert-card.WARNING .alert-level-chip  { background: rgba(245,158,11,.2); color: var(--amber) }
-        .alert-card.CRITICAL .alert-level-chip { background: rgba(239,68,68,.2);  color: var(--red) }
+
+        .alert-card.WARNING .alert-level-chip {
+            background: rgba(245, 158, 11, .2);
+            color: var(--amber)
+        }
+
+        .alert-card.CRITICAL .alert-level-chip {
+            background: rgba(239, 68, 68, .2);
+            color: var(--red)
+        }
 
         /* header badge */
         #alert-badge {
@@ -661,8 +704,21 @@
             border: 1px solid;
             transition: all .4s
         }
-        #alert-badge.WARNING  { display:flex; border-color:rgba(245,158,11,.4); color:var(--amber); background:rgba(245,158,11,.1) }
-        #alert-badge.CRITICAL { display:flex; border-color:rgba(239,68,68,.4);  color:var(--red);   background:rgba(239,68,68,.1); animation:alertPulse 1.5s infinite }
+
+        #alert-badge.WARNING {
+            display: flex;
+            border-color: rgba(245, 158, 11, .4);
+            color: var(--amber);
+            background: rgba(245, 158, 11, .1)
+        }
+
+        #alert-badge.CRITICAL {
+            display: flex;
+            border-color: rgba(239, 68, 68, .4);
+            color: var(--red);
+            background: rgba(239, 68, 68, .1);
+            animation: alertPulse 1.5s infinite
+        }
 
         @media(max-width:900px) {
 
@@ -970,7 +1026,7 @@
 
         // WebSocket
         function connect() {
-            const ws = new WebSocket('ws://localhost:8080/ws');
+            const ws = new WebSocket('ws://localhost:3000/ws');
             const cb = document.getElementById('cb'), ct = document.getElementById('ct');
             ws.onopen = () => { cb.className = 'on'; ct.textContent = 'Live'; log('Connected to ws://localhost:8080/ws', 'ok') };
             ws.onmessage = e => { try { render(JSON.parse(e.data)) } catch (x) { log('Parse error: ' + x.message, 'err') } };
