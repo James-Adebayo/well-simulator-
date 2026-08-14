@@ -1,10 +1,12 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"math/rand"
+	"net/http"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 type WellState string
@@ -150,40 +152,57 @@ func (w *Well) GetTelemetry() Telemetry {
 	}
 }
 
-func main() {
-	well := Well{
-		ID:          "WELL-001",
-		State:       Producing,
-		Pressure:    3200,
-		Temperature: 82,
-		FlowRate:    2500,
-		ValveOpen:   true,
-		PumpRunning: true,
+type Response struct {
+	Success bool        `json:"success"`
+	Data    interface{} `json:"data"`
+}
+
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
+
+func wsHandler(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		return
 	}
 
-	fmt.Println("Oil Well Telemetry Simulator")
-	fmt.Println("-----------------------------")
-	fmt.Println("Well:", well.ID)
-	fmt.Println("State:", well.State)
-	fmt.Println()
+	defer conn.Close()
 
 	for {
-		// Update the simulated physical state.
+		well := Well{
+			ID:          "WELL-001",
+			State:       Producing,
+			Pressure:    3200,
+			Temperature: 82,
+			FlowRate:    2500,
+			ValveOpen:   true,
+			PumpRunning: true,
+		}
 		well.Update()
-
-		// Take a telemetry snapshot.
 		telemetry := well.GetTelemetry()
 
-		// Convert telemetry to JSON.
-		data, err := json.Marshal(telemetry)
+		err := conn.WriteJSON(telemetry)
 		if err != nil {
-			fmt.Println("Error encoding telemetry:", err)
-			continue
+			break
 		}
 
-		fmt.Println(string(data))
-
-		// Wait one second before the next reading.
-		time.Sleep(1 * time.Second)
+		time.Sleep(time.Second)
 	}
+}
+
+func main() {
+	http.HandleFunc("/ws", wsHandler)
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "index.html")
+	})
+	http.HandleFunc("/well/telementry", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Println("Request hits well telementry")
+	})
+	fmt.Println("server started on http://localhost:8080/")
+	http.ListenAndServe(":8080", nil)
+
 }
