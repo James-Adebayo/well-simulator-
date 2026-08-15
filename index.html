@@ -1026,7 +1026,7 @@
 
         // WebSocket
         function connect() {
-            const ws = new WebSocket('ws://localhost:3000/ws');
+            const ws = new WebSocket('ws://localhost:8080/ws');
             const cb = document.getElementById('cb'), ct = document.getElementById('ct');
             ws.onopen = () => { cb.className = 'on'; ct.textContent = 'Live'; log('Connected to ws://localhost:8080/ws', 'ok') };
             ws.onmessage = e => { try { render(JSON.parse(e.data)) } catch (x) { log('Parse error: ' + x.message, 'err') } };

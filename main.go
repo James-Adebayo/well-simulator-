@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -361,6 +363,11 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Println("Request hits well telemetry")
 	})
-	fmt.Println("Server started on http://localhost:8080/")
-	http.ListenAndServe(":8080", nil)
+	// fmt.Println("Server started on http://localhost:8080/")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	log.Printf("Listening on port %s", port)
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
