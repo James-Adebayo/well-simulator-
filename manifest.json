@@ -1,0 +1,10 @@
+{
+  "name": "Well simulator",
+  "short_name": "Well simulator",
+  "description": "Real-time telemetry dashboard for WELL-001 oil well simulator.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#08090d",
+  "theme_color": "#8b5cf6"
+}
